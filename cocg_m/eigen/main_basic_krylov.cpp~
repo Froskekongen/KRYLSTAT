@@ -1,0 +1,57 @@
+#define EIGEN_YES_I_KNOW_SPARSE_MODULE_IS_NOT_STABLE_YET
+
+#include <omp.h>
+#include <Eigen/Sparse>
+#include <iostream>
+#include "eigen_cocg_m.h"
+#include "eigen_basic_krylov.h"
+
+
+using namespace Eigen;
+
+int main()
+{ 
+  int_type sizeAmat=6000;
+  // int_type Nsamples=10;
+  
+  std::cout << "We have come to line 15 \n\n";
+  
+  SparseMatrix<double,1,int> AB(sizeAmat,sizeAmat);
+  AB.reserve(3*sizeAmat);
+  for (unsigned int iii=0;iii<sizeAmat;++iii){AB.insert(iii,iii)=2.01;}
+  for (unsigned int iii=0;iii<sizeAmat-1;++iii){AB.insert(iii+1,iii)=-1.;}
+  for (unsigned int iii=0;iii<sizeAmat-1;++iii){AB.insert(iii,iii+1)=-1.;}
+  AB.finalize();
+  SparseMatrix<double,RowMajor,long long int> A(AB);
+  
+  VectorXd z=VectorXd::Ones(sizeAmat);
+  DiagonalWrapper<const VectorXd> M=z.asDiagonal();
+  
+  
+  VectorXd b=VectorXd::Random(sizeAmat);
+  VectorXd x=VectorXd::Random(sizeAmat);
+  default_monitor<double> Mon1(b,5000,1e-6);
+  
+  //std::cout << M*b-b;
+  
+  eigen_krylov::cg(A,b,x,Mon1);
+  
+  std::cout << "Test cg: " << Mon1.residual_norm()  << " Iters=" << Mon1.iteration_count() << "\n";
+  std::cout << "Test cg 2: " << (A*x-b).norm() << "\n";
+  
+  
+  Mon1.reset();
+  x=VectorXd::Zero(sizeAmat);
+  VectorXd dualR=VectorXd::Random(sizeAmat);
+  
+  
+  eigen_krylov::bicg_stab(A,M,b,x,dualR,Mon1);
+  
+  std::cout << "Test prec cg: " << Mon1.residual_norm()  << " Iters=" << Mon1.iteration_count() << "\n";
+  std::cout << "Test prec cg 2: " << (A*x-b).norm() << "\n\n";
+  
+  // std::cout << x.array()*x.array() << "\n\n" << x << "\n\n";
+  
+  
+  return 1;
+}

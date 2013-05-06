@@ -1,0 +1,59 @@
+#ifndef GMRFSAMPLING_H
+#define GMRFSAMPLING_H
+
+
+#include <cuda.h>
+#include <curand.h>
+#include <curand_kernel.h>
+
+#include <cusp/hyb_matrix.h>
+#include <cusp/coo_matrix.h>
+#include <cusp/csr_matrix.h>
+#include <cusp/gallery/poisson.h>
+#include <cusp/krylov/cg_m.h>
+#include <thrust/random/linear_congruential_engine.h>
+#include <thrust/random/normal_distribution.h>
+#include <jacEl/ellKKP.h>
+
+
+
+
+typedef cusp::device_memory devMem;
+typedef cusp::host_memory hostMem;
+
+template<class VectorType> 
+void arrayToCuspArray(int Nrat,double *intConst,double *wsq,double *dzdt,VectorType &cuspWsq,VectorType &cuspDzdt,VectorType &cuspIntConst)
+{
+  cuspIntConst[0]=*intConst;
+  for (int iii=0;iii<Nrat;iii++)
+  {
+    cuspWsq[iii]=wsq[iii];
+    cuspDzdt[iii]=dzdt[iii];
+  } 
+}
+
+template<class VType,class VectorView,class IntType>
+void wrapArray1D(VType *rawPoint,VectorView &targetVectorView, IntType &N)
+{
+  thrust::device_ptr<VType> wrappedPoint(rawPoint);
+  targetVectorView=cusp::array1d_view<thrust::device_ptr<VType>>(rawPoint,rawPoin+N);
+  
+}
+
+
+/*template <class LinearOperator,
+          class VectorType1,
+          class VectorType2,
+          class VectorType3,
+          class VectorType4,
+          class Monitor
+          class ValueType>
+void cg_m_sampling(LinearOperator &A,ValueType &intConst,VectorType1 &wsq, VectorType1 &dzdt, VectorType2 &sampTemp,VectorType3 &outVec,VectorType4 &shiftedTemp. Monitor &mon)
+{
+  CUSP_PROFILE_SCOPED();
+  sampTemp;
+}*/
+
+
+
+#endif

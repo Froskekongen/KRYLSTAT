@@ -1,0 +1,34 @@
+#include <sampling/gmrfSampling.h>
+
+
+template <class LinearOperator,
+          class VectorType1,
+          class VectorType2,
+          class VectorType3,
+          class Monitor,
+          class ValueType,
+          class MemorySpace>
+void cg_m_sampling(LinearOperator& A,VectorType1& outVec, int& Nrat,int& samples, ValueType minEig,ValueType maxEig, Monitor& monitor)
+{
+  // Generate rational approximations
+  double *intConst;
+  double *wsq=new double[Nrat];
+  double *dzdt=new double[Nrat];
+  sqrtIntPoints(Nrat,minEig,maxEig,intConst,wsq,dzdt);
+  
+  cusp::array1d<ValueType, MemorySpace> sigma(Nrat);
+  for (int iii=0;iii<Nrat;iii++)
+  {
+    sigma[iii]=wsq[iii];
+    std::cout << sigma[iii] << "\n";
+  }
+    
+  cusp::array1d<ValueType, MemorySpace> outVec(A.num_rows, ValueType(1));
+  
+  
+  
+  delete intConst;
+  delete[] wsq;
+  delete[] dzdt;
+}
+       

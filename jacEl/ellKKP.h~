@@ -1,0 +1,22 @@
+#ifndef ELLKKP_H
+#define ELLKKP_H
+
+#include <math.h>
+#include <complex>
+#include <limits>
+#include <iostream>
+#include <stdio.h>
+
+typedef long double base;
+typedef std::complex<base> cpxBase;
+typedef std::complex<double> cpxDbl;
+
+void ellKKP(base L,base *K,base *Kp);
+void ellKKP(double L,double &K,double &Kp);
+void ellPJC(base u,base m,base &sn,base &cn,base &dn,base &am);
+void ellPJC(double u,double m,double &sn,double &cn,double &dn,double &am);
+void ellPJC(cpxBase const &u, base m,cpxBase &sn, cpxBase &cn,cpxBase &dn);
+void sqrtIntPoints(int N,double minEig,double maxEig,double *intConst,double *wsq,double *dzdt);
+void logIntPoints(int N, double minEig,double maxEig, double *intConst, cpxDbl *wsq, cpxDbl *dzdt);
+
+#endif

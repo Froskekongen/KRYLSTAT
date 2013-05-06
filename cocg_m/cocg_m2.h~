@@ -1,0 +1,69 @@
+#ifndef COCG_M2_H
+#define COCG_M2_H
+
+#define EIGEN_YES_I_KNOW_SPARSE_MODULE_IS_NOT_STABLE_YET
+
+#include <Eigen/Eigen>
+#include "monitor.h"
+#include <typeinfo>
+
+using namespace Eigen;
+
+
+
+template <class Derived1, class Derived2, class Derived3 ,class Monitor>
+void eig_cocg_m(const MatrixBase<Derived1> &A, const MatrixBase<Derived1> &b, MatrixBase<Derived3> const &x, MatrixBase<Derived3> const &x_sh, const MatrixBase<Derived2> &shifts, Monitor &monitor)
+{
+  std::cout << "Initialising COCG-M \n";
+  
+  typedef typename Derived1::Scalar Scalar;
+  typedef typename Derived2::Scalar ShiftScalar;
+  
+  // Check complexity
+  bool isComplex=0;
+  if (typeid(shifts(0))==typeid(cpxDbl)){isComplex=1;};
+  std::cout << "We have complex shifts: " << isComplex << "\n";
+  
+  
+  assert(A.cols() == A.rows());
+  assert(A.cols() == b.rows());  // sanity checks
+  
+  // const int_type N=A.rows();
+  const int_type ns=shifts.size();
+  int_type len = ns;
+  
+  // Nonshifted quantities
+  MatrixBase<Derived1> r=b;
+  MatrixBase<Derived1> p=r;
+  // Vector x=0.*b; //in real version, x i excluded and only x_sh is evaluated
+  Scalar b_norm=b.norm();
+  
+  Scalar b_old=1.;
+  Scalar alpha0=0.;
+  Scalar c_cur=b_norm*b_norm;
+  
+  // Shifted initialisers
+  MatrixBase<Derived2> z_old=shifts;
+  for (int_type iii=0;iii<ns;++iii){z_old(iii)=1;}
+  //Matrix<ShiftScalar,Dynamic,1> z_old=MatrixXd::Ones(ns,1);
+  MatrixBase<Derived2> z_cur=z_old;
+  MatrixBase<Derived2> z_new=0.*z_old;
+  MatrixBase<Derived2> b_sh=z_new;
+  MatrixBase<Derived2> a_sh=z_new;
+  
+  
+  x_sh=0*x_sh;
+  MatrixBase<Derived2> p_sh=x_sh;
+
+  if(!isComplex)
+  {
+    p_sh=b.replicate(1,ns);
+  }
+  else
+  {
+    // Vector b1=b.template cast<cpxDbl>();
+    p_sh=b.template cast<MatrixXcd>().replicate(1,ns);
+  }
+};
+
+#endif

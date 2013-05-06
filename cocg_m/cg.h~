@@ -1,0 +1,14 @@
+
+
+
+
+/*! \p cg : Conjugate Gradient method
+ *
+ * Solves the symmetric, positive-definite linear system A x = b without preconditioning.
+ */
+template <class LinearOperator,
+          class Vector,
+          class Monitor>
+void cg(LinearOperator& A,
+        Vector& x,
+        Vector& b,Monitor &monitor);

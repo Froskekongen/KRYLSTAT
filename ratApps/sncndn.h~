@@ -1,0 +1,27 @@
+#ifndef SNCNDN_H
+#define SNCNDN_H
+
+#include <arprec/mp_real.h>
+#include <arprec/mp_complex.h>
+
+#include <math.h>
+#include <complex>
+#include <limits>
+#include <iostream>
+#include <stdio.h>
+
+typedef std::complex<double> cpxDbl;
+
+
+void ellKKP(mp_real L,mp_real &K,mp_real &Kp);
+void ellKKP(double L,double &K,double &Kp);
+
+mp_complex poly_six(mp_complex mmf);
+void recursiveSNCNDN(mp_complex u,mp_complex m, mp_complex &sn, mp_complex &cn, mp_complex &dn);
+void recursiveSNCNDN(cpxDbl u,double m, cpxDbl &sn, cpxDbl &cn, cpxDbl &dn);
+void recursiveSNCNDN(double u,double m, double &sn, double &cn, double &dn);
+
+void sqrtIntPoints(int N,double minEig,double maxEig,double *intConst,double *wsq,double *dzdt);
+void logIntPoints(int N, double minEig, double maxEig, double *intConst, cpxDbl *wsq, cpxDbl *dzdt);
+
+#endif

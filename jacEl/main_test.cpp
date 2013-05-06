@@ -1,0 +1,107 @@
+#include <stdio.h>
+#include <iostream>
+
+//#include "ap.h"
+//#include "specialfunctions.h"
+#include "ellKKP.h"
+
+
+int main()
+{
+  double u=0.5;double m=0.99999;
+  double sn,cn,dn,ph;
+  /*alglib::jacobianellipticfunctions(u,m,sn,cn,dn,ph);
+  
+  std::cout << "Alglib: sn=" << sn << ", cn=" << cn << ", dn=" << dn << "\n";*/
+  
+  /*base u2(static_cast<base>(u));base m2(static_cast<base>(m));
+  base sn2,cn2,dn2,ph2;
+  ellPJC(u2,m2,sn2,cn2,dn2,ph2);
+  
+  std::cout << "Myown: sn=" << sn2 << ", cn=" << cn2 << ", dn=" << dn2 << "\n";*/
+  
+  
+  /*cpxBase u3(0.5,0.7);base m3(0.5);*/
+  cpxBase u3(0.5,0.0);base m3(0.8);
+  cpxBase sn3,cn3,dn3;
+  ellPJC(u3,m3,sn3,cn3,dn3);
+  
+  std::cout << "Myown cpx: sn=" << sn3 << ", cn=" << cn3 << ", dn=" << dn3 << "\n";
+  
+  
+  
+  base K,Kp;
+  base *Kpt=&K;
+  base *Kppt=&Kp;
+  
+  ellKKP(0.9999999999L,Kpt,Kppt);
+  double K2,Kp2;
+  ellKKP(0.9999999999,K2,Kp2);
+  
+  
+  std::cout << "K=" << K2 << ", Kp=" << Kp2 << "\n";
+  std::cout << "long double has " << std::numeric_limits<long double>::epsilon() << " epsilon \n";
+  
+  printf("Bob \n\n");
+  
+  
+  
+  int N=5;
+  double *intConst=new double;
+  double *wsq=new double[N];
+  double *dzdt=new double[N];
+  
+  sqrtIntPoints(N,1.0e-5,1.0e5,intConst,wsq,dzdt);
+  
+  for (int iii=0;iii<N;iii++)
+  {
+    std::cout << "wsq(" << iii << ")=" << wsq[iii] <<", dzdt(" << iii << ")=" << dzdt[iii] << "\n";
+  }
+  
+  delete intConst;
+  delete[] wsq;
+  delete[] dzdt;
+  
+  double *intConst2=new double;
+  cpxDbl *wsq2=new cpxDbl[N];
+  cpxDbl *dzdt2=new cpxDbl[N];
+  
+  logIntPoints(N,1.0e-1,1.0e2,intConst2,wsq2,dzdt2);
+  
+  for (int iii=0;iii<N;iii++)
+  {
+    std::cout << "wsq2(" << iii << ")=" << wsq2[iii] <<", dzdt2(" << iii << ")=" << dzdt2[iii] << "\n";
+  }
+  delete intConst2;
+  delete[] wsq2;
+  delete[] dzdt2;
+  
+  
+  
+
+  
+  
+  /*double *intConst3;
+  double *wsq3;
+  double *dzdt3;
+  double tol=1.e-3;
+  int Npts(  sqrtIntPoints(tol,1.e-2,1.e3,intConst3,wsq3,dzdt3)  );
+  std::cout << "With tolerance criterion. intConst3=" <<*intConst3 << ", Npts=" << Npts << "\n";
+  for (int iii=0;iii<N;iii++)
+  {
+    std::cout << "wsq3(" << iii << ")=" << wsq3[iii] <<", dzdt3(" << iii << ")=" << dzdt3[iii] << "\n";
+  }
+  
+  delete intConst3;
+  delete[] wsq3;
+  delete[] dzdt3;*/
+  
+  /*base* testPtr;
+  testPtr=new base[10];
+  for (int iii=0;iii<10;iii++)
+  {
+    testPtr[iii]=iii;
+    std::cout << testPtr[iii] << ", ";
+  }*/
+  return 1;
+}

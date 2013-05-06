@@ -1,0 +1,545 @@
+// This file is part of the KRYLSTAT function library
+//
+// Copyright (C) 2011 Erlend Aune <erlenda@math.ntnu.no>
+//
+// The KRYLSTAT library is free software; 
+// you can redistribute it and/or modify it under the terms 
+// of the GNU Lesser General Public License as published by
+// the Free Software Foundation; either version 3 of the 
+// License, or (at your option) any later version.
+//
+// Alternatively, you can redistribute it and/or
+// modify it under the terms of the GNU General Public License as
+// published by the Free Software Foundation; either version 2 of
+// the License, or (at your option) any later version.
+//
+// The KRYLSTAT library is distributed in the 
+// hope that it will be useful, but WITHOUT ANY WARRANTY; without
+// even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+// PARTICULAR PURPOSE. See the GNU Lesser General Public License
+// or the GNU General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License and a copy of the GNU General Public License along with
+// the KRYLSTAT library. If not, see 
+// <http://www.gnu.org/licenses/>.
+
+#ifndef EIGEN_DET_APP_H
+#define EIGEN_DET_APP_H
+
+/*! Include openmp */
+#include <omp.h>
+#include <typeinfo>
+
+/*! Including Eigen  */
+#include <Eigen/Eigen>
+//#include <unsupported/Eigen/SparseExtra>
+
+/*! Including what I need from boost */
+#include <boost/random.hpp>
+#include <boost/random/normal_distribution.hpp>
+#include <boost/random/mersenne_twister.hpp>
+
+/*! Including the rest of the stuff */
+#include "../../cocg_m/basis/monitor.h"
+#include "../../cocg_m/eigen/eigen_cocg_m.h"
+#include "../../cocg_m/eigen/eigen_basic_krylov.h"
+// #include "../../ratApps/sncndn.h"
+#include "../../lanczos/eigen/eigen_lanczos.h"
+#include "../../cocg_m/eigen/eigen_basic_krylov.h"
+#include "../../jacEl/jacobiEllipticDouble.h"
+
+
+#include "../SpStructCont.h"
+#include "../../eigen_pow.h"
+
+/*! Including ColPack stuff */
+#include "ColPackHeaders.h"
+
+
+
+
+
+using namespace Eigen;
+using namespace ColPack;
+
+typedef unsigned int int_type;
+
+
+
+
+template <class LinearOperator, class Scalar1, class Derived1, class CgIntType >
+void logDetApp(const LinearOperator &A, const Scalar1 &min_eig, const Scalar1 &max_eig, 
+		 const int_type nshifts, const Scalar1 &cg_tol, const CgIntType &cgMaxIter, const int_type kdist, 
+		 Scalar1 &logdet, const MatrixBase<Derived1> &margVars, int verbosity);
+
+
+template <class LinearOperator, class Derived1, class Scalar1, class CgIntType>
+void logDetMargVar(const LinearOperator &A, const Scalar1 &cgTol, const CgIntType &cgMaxIter, const int_type kdist,
+		   Scalar1 &logdet, const MatrixBase<Derived1> &margVars, int verbosity);
+
+template <class LinearOperator, class Derived1, class Scalar1, class CgIntType>
+void logDetDenseRows(const LinearOperator &A, const MatrixBase<Derived1> &denseVecs, const MatrixBase<Derived1> &C, 
+		     const Scalar1 &cgTol, const CgIntType &cgMaxIter, const int_type kdist, Scalar1 &logdet, 
+		     const MatrixBase<Derived1> &margVars, int verbosity);
+
+
+
+template <class Derived1, class Derived2, class IntegerType>
+void computeProbingVectors(const SparseMatrixBase<Derived1> &A, const MatrixBase<Derived2> &probeVec, int Coloringtype, const IntegerType &kdist,
+			   int verbosity);
+
+
+   
+
+// template <class Scalar1, class DerivedX, class ShiftInteger>
+// void computeShft(const Scalar1 &minEig, const Scalar1 &maxEig, const ShiftInteger &nshifts, const MatrixBase<DerivedX> &wsqEig,
+// 		   const MatrixBase<DerivedX> &dzdtEig, const Scalar1 &intConstEig, int verbosity);
+
+template <class LinearOperator, class Scalar1, class Derived1, class Derived2, class Derived3, class CgIntType>
+void logDetBase(const LinearOperator &A, const MatrixBase<Derived1> &ProbeVec, const MatrixBase<Derived2> &wsqEig,
+		const MatrixBase<Derived2> &dzdt, const Scalar1 &intConst, const Scalar1 &cg_tol, const CgIntType &cgMaxIter, 
+		Scalar1 &logdet, const MatrixBase<Derived3> &margVars, int verbosity);
+
+
+template <class LinearOperator, class LinearOperatorPrec, class Derived1, class Derived2, class Scalar1, class CgIntType>
+void computeMargVars(const LinearOperator &A, const LinearOperatorPrec &M, const MatrixBase<Derived1> &ProbeVec,
+		     const MatrixBase<Derived2> &margVars, const Scalar1 &cg_tol, const CgIntType &cgMaxIter);
+
+
+template <class Derived1, class Derived2>
+void populateProbe(const MatrixBase<Derived1> &probeInd, const MatrixBase<Derived2> &probe, int &index, bool random=true);
+
+
+template <class Derived1, class Derived2>
+void populateProbe(const MatrixBase<Derived1> &probeInd, const MatrixBase<Derived2> &probe, int &index, bool random=true)
+{
+  typedef typename Derived2::Scalar BaseScalar;
+  for (int jjj=0;jjj<probeInd.rows();++jjj)
+  {
+    if ( probeInd(jjj)==index )
+    {
+      if(random)
+      {
+	switch ( static_cast<int>(floor(VectorXd::Random(1)(0))) )
+	{
+	  case 0:
+	    const_cast<BaseScalar & >(probe(jjj))=BaseScalar(1);
+	    break;
+	  case -1:
+	    const_cast<BaseScalar & >(probe(jjj))=BaseScalar(-1);
+	    break;
+	  default:
+	    const_cast<BaseScalar & >(probe(jjj))=BaseScalar(1);
+	}
+      }
+      else
+      {
+	const_cast<BaseScalar & >(probe(jjj))=BaseScalar(1);
+      }
+    }
+  }
+  std::cout << probe << "\n\n";
+}
+
+
+
+
+
+
+
+template <class LinearOperator, class LinearOperatorPrec, class Derived1, class Derived2, class Scalar1, class CgIntType>
+void computeMargVars(const LinearOperator &A, const LinearOperatorPrec &M, const MatrixBase<Derived1> &ProbeVec,
+		     const MatrixBase<Derived2> &margVars, const Scalar1 &cg_tol, const CgIntType &cgMaxIter)
+{
+  int nCol=ProbeVec.maxCoeff();
+  typedef typename Derived2::Scalar BaseScalar;
+  
+  
+
+  // Matrix<BaseScalar,Dynamic,1> localMargVar=Matrix<BaseScalar,Dynamic,1>::Zero(A.cols());
+//#pragma omp parallel for
+  for(int iii=0;iii<nCol+1;++iii)
+  {
+    Matrix<BaseScalar,Dynamic,1> probe=Matrix<BaseScalar,Dynamic,1>::Zero(A.cols());
+    Matrix<BaseScalar,Dynamic,1> probeAinv=Matrix<BaseScalar,Dynamic,1>::Zero(A.cols());
+    
+    populateProbe(ProbeVec, probe, iii);
+    
+//     for (int jjj=0;jjj<A.cols();++jjj)
+//     {
+//       if ( ProbeVec(jjj)==iii )
+//       {
+// 	
+// 	switch ( static_cast<int>(floor(VectorXd::Random(1)(0))) )
+// 	{
+// 	  case 0:
+// 	    probe(jjj)=Scalar1(1);
+// 	    break;
+// 	  case -1:
+// 	    probe(jjj)=Scalar1(-1);
+// 	    break;
+// 	  default:
+// 	    probe(jjj)=Scalar1(1);
+// 	}
+//       }
+//     }
+    
+    default_monitor<Scalar1> mon(probe,cgMaxIter,cg_tol);
+    Matrix<BaseScalar,Dynamic,1> dualR=probe;
+    
+    eigen_krylov::bicg_stab(A,M,probe,probeAinv,dualR,mon);
+
+#pragma omp critical
+    {
+      const_cast< MatrixBase<Derived2>& >(margVars)=margVars.array() + probe.array()*probeAinv.array();
+    }
+    //localMargVar=probe.array()*probeAinv.array();
+    
+  }
+}
+
+
+template <class LinearOperator, class Derived1, class Derived2, class Scalar1, class CgIntType>
+void computeMargVarsDuplicateQ(const LinearOperator &A, const MatrixBase<Derived1> &ProbeVec,
+		     const MatrixBase<Derived2> &margVars, const Scalar1 &cg_tol, const CgIntType &cgMaxIter)
+{ 
+  int nCol=ProbeVec.maxCoeff();
+  typedef typename Derived2::Scalar BaseScalar;
+  
+#pragma omp parallel for
+  for(int iii=0;iii<nCol+1;++iii)
+  {
+    const Matrix<BaseScalar,Dynamic,1> probe=Matrix<BaseScalar,Dynamic,1>::Zero(A.cols());
+    Matrix<BaseScalar,Dynamic,1> probeAinv=Matrix<BaseScalar,Dynamic,1>::Zero(A.cols());
+    Matrix<BaseScalar,Dynamic,1> tempProbe=Matrix<BaseScalar,Dynamic,1>::Zero(A.cols());
+    
+    populateProbe(ProbeVec, probe, iii);
+    
+    default_monitor<Scalar1> mon(probe,cgMaxIter,cg_tol);
+    eigen_krylov::bicg_stab(A,probe,probeAinv,mon);
+    
+    tempProbe=probeAinv;
+
+    default_monitor<Scalar1> mon2(tempProbe,cgMaxIter,cg_tol);
+    eigen_krylov::bicg_stab(A,tempProbe,probeAinv,mon2);
+    
+#pragma omp critical
+    {
+      const_cast< MatrixBase<Derived2>& >(margVars)=margVars.array() + probe.array()*probeAinv.array();
+    }
+    
+  }
+}
+
+
+template <class LinearOperator, class LinearOperatorPrec, class Derived1, class Derived2, class Scalar1, class CgIntType>
+void computeMargVarsTriMat(const LinearOperator &A, const LinearOperator &B, const LinearOperator &C, const LinearOperatorPrec &MA,
+			   const LinearOperatorPrec &MB, const LinearOperatorPrec &MC, const MatrixBase<Derived1> &ProbeVec,
+			   const MatrixBase<Derived2> &margVars, const Scalar1 &cg_tol, const CgIntType &cgMaxIter)
+{
+  int nCol=ProbeVec.maxCoeff();
+  typedef typename Derived2::Scalar BaseScalar;
+
+#pragma omp parallel for
+  for(int iii=0;iii<nCol+1;++iii)
+  {
+    const Matrix<BaseScalar,Dynamic,1> probe=Matrix<BaseScalar,Dynamic,1>::Zero(A.cols());
+    Matrix<BaseScalar,Dynamic,1> probeAinv=Matrix<BaseScalar,Dynamic,1>::Zero(A.cols());
+    Matrix<BaseScalar,Dynamic,1> tempProbe=Matrix<BaseScalar,Dynamic,1>::Zero(A.cols());
+    
+    populateProbe(ProbeVec, probe, iii);
+    
+    default_monitor<Scalar1> mon(probe,cgMaxIter,cg_tol);  
+    Matrix<BaseScalar,Dynamic,1> dualR=probe;
+    
+    eigen_krylov::bicg_stab(A,MA,probe,probeAinv,dualR,mon);
+    
+    tempProbe=probeAinv;
+    
+    default_monitor<Scalar1> mon2(tempProbe,cgMaxIter,cg_tol);
+    eigen_krylov::bicg_stab(B,MB,tempProbe,probeAinv,dualR,mon2);
+    
+    tempProbe=probeAinv;
+    
+    default_monitor<Scalar1> mon3(tempProbe,cgMaxIter,cg_tol);
+    eigen_krylov::bicg_stab(C,MC,tempProbe,probeAinv,dualR,mon3);
+    
+#pragma omp critical
+    {
+      const_cast< MatrixBase<Derived2>& >(margVars)=margVars.array() + probe.array()*probeAinv.array();
+    }
+    
+  }    
+    
+    
+}
+
+
+
+
+
+
+
+
+
+
+template <class LinearOperator, class Scalar1, class Derived1, class Derived2, class Derived3, class CgIntType>
+void logDetBase(const LinearOperator &A, const MatrixBase<Derived1> &ProbeVec, const MatrixBase<Derived2> &wsqEig,
+		const MatrixBase<Derived2> &dzdt, const Scalar1 &intConst, const Scalar1 &cg_tol, const CgIntType &cgMaxIter, 
+		Scalar1 &logdet, const MatrixBase<Derived3> &margVars, int verbosity)
+{
+  int nCol=ProbeVec.maxCoeff();
+  typedef typename Derived2::Scalar Scalar2;
+  const int nshifts=wsqEig.rows();
+  // std::cout << "Number of Colours: " << nCol+1 << "\n\n";
+  Matrix<Scalar1,Dynamic,1> logdetparts=Matrix<Scalar1,Dynamic,1>::Zero(nCol+1);
+#pragma omp parallel for
+  for(int iii=0;iii<nCol+1;++iii)
+  {
+    Matrix<Scalar1,Dynamic,1> probe=Matrix<Scalar1,Dynamic,1>::Zero(A.cols());
+    // Matrix<Scalar1,Dynamic,1> temp(A.cols());
+    Matrix<Scalar1,Dynamic,1> temp=Matrix<Scalar1,Dynamic,1>::Zero(A.cols());
+    Matrix<Scalar2,Dynamic,1> logV=Matrix<Scalar2,Dynamic,1>::Zero(A.cols());
+    
+    Matrix<Scalar2,Dynamic,Dynamic> x_sh=Matrix<Scalar2,Dynamic,Dynamic>::Zero(A.cols(),nshifts);
+    
+    for (int jjj=0;jjj<A.cols();++jjj)
+    {
+      if ( ProbeVec(jjj)==iii )
+      {
+	
+	switch ( static_cast<int>(floor(VectorXd::Random(1)(0))) )
+	{
+	  case 0:
+	    probe(jjj)=Scalar1(1);
+	    break;
+	  case -1:
+	    probe(jjj)=Scalar1(-1);
+	    break;
+	  default:
+	    probe(jjj)=Scalar1(1);
+	}
+      }
+    }
+    
+    default_monitor<Scalar1> mon(probe,cgMaxIter,cg_tol);
+    eigen_cocg_m(A, probe, temp, x_sh, wsqEig, mon);
+    if(  ( (iii==0) || ((iii%20)==0) ) && (verbosity>3)  )
+    {
+      std::cout << "Iteration needed for probing vector " << iii << ": " <<mon.iteration_count()  << "\n";
+    }
+    
+    
+    for (int kkk=0;kkk<nshifts;++kkk)
+    {
+      logV=logV-dzdt(kkk)*x_sh.col(kkk);
+    }
+    temp=(intConst)*logV.imag();
+    temp=A*temp;
+    logdetparts(iii)=temp.dot(probe);
+  }
+  logdet=logdetparts.sum();
+}
+   
+   
+
+
+
+// template <class Scalar1, class DerivedX, class ShiftInteger>
+// void computeShft(const Scalar1 &minEig, const Scalar1 &maxEig, const ShiftInteger &nshifts, const MatrixBase<DerivedX> &wsqEig,
+// 		   const MatrixBase<DerivedX> &dzdtEig, const Scalar1 &intConstEig, int verbosity)
+// {
+//   // typedef std::complex<Scalar1> Scalar2;
+//   typedef typename DerivedX::Index IntegerType;
+//   typedef typename DerivedX::Scalar cpxScalar;
+//   Scalar1 *intConst = new Scalar1;
+//   cpxScalar *wsq = new cpxScalar[nshifts];
+//   cpxScalar *dzdt = new cpxScalar[nshifts];
+//   
+//   logIntPoints(nshifts, minEig, maxEig, intConst, wsq, dzdt);
+//   for(IntegerType iii=0;iii<nshifts;++iii)
+//   {
+//     const_cast<cpxScalar &>(wsqEig(iii))=-wsq[iii];
+//     const_cast<cpxScalar &>(dzdtEig(iii))=dzdt[iii];
+//   }
+//   const_cast<Scalar1 &>(intConstEig)=*intConst;
+//   if(verbosity>1)
+//   {
+//     std::cout <<"Shifts: " <<  wsqEig << "\n Quadrature points: " << dzdtEig << "\n Integration constant: " << intConstEig << "\n\n";
+//   }
+//   delete[] wsq;
+//   delete[] dzdt;
+//   delete intConst;
+// }
+
+
+
+
+
+template <class LinearOperator, class Derived2, class IntegerType>
+void computeProbingVectors(const LinearOperator &A, const MatrixBase<Derived2> &probeVec, int Coloringtype, const IntegerType &kdist,
+			   int verbosity)
+{
+  //typedef typename internal::traits<LinearOperator>::Index indexType;
+  //SparseMatrix<bool,Dynamic,indexType> B(A);
+  
+  SparseMatrix<bool,Dynamic,int> B(A);
+  
+  eigen_power_sparse(A,kdist,B); // The product is the problem
+//     int *col_indices=B._innerIndexPtr();
+//     int *row_offsets=B._outerIndexPtr();
+//     indexType *col_indices=B._innerIndexPtr();
+//     indexType *row_offsets=B._outerIndexPtr();
+//   indexType *col_indices=B.innerIndexPtr();
+//   indexType *row_offsets=B.outerIndexPtr();  
+  int *col_indices=B.innerIndexPtr();
+  int *row_offsets=B.outerIndexPtr();
+  
+  
+  //SpStructCont<indexType> SPS(row_offsets,col_indices,A.cols());
+  SpStructCont<int> SPS(row_offsets,col_indices,A.cols());
+  // std::cout << "Coloring struct done \n";
+  
+// SPS.printSPS();
+  GraphColoringInterface * ColOr = new GraphColoringInterface(SRC_MEM_ADOLC, SPS.pptr, SPS.num_rows);
+  switch(Coloringtype)
+  {
+    case 1:
+      ColOr->Coloring("NATURAL", "DISTANCE_ONE");
+      break;
+    case 2:
+      ColOr->Coloring("NATURAL", "DISTANCE_TWO");
+      break;
+    default:
+      ColOr->Coloring("NATURAL", "DISTANCE_TWO");
+      break;
+  }
+  // std::cout << "Coloring done \n";
+  std::vector<int> col_vec;
+  ColOr->GetVertexColors(col_vec);
+  if(verbosity>1)
+  {
+    ColOr->PrintVertexColoringMetrics();
+  }
+  delete ColOr;
+  /*Derived2 temp(probeVec.rows());
+  // std::cout << "Rows: " << temp.rows() << "," << probeVec.rows() << "," << A.rows() << "\n";
+  for (int iii=0;iii<A.cols();++iii)
+  {
+    temp(iii)=col_vec[iii];
+  }
+  
+  const_cast< MatrixBase<Derived2>& >(probeVec)=temp;*/
+  for (int iii=0;iii<A.cols();++iii)
+  {
+    const_cast<int &>(probeVec(iii))=col_vec[iii];
+  }
+  
+  if(verbosity>3)
+  {
+    std::cout << probeVec << "\n";
+  }
+}
+
+
+
+
+
+template <class LinearOperator, class Derived1, class Scalar1, class CgIntType>
+void logDetDenseRows(const LinearOperator &A, const MatrixBase<Derived1> &denseVecs, const MatrixBase<Derived1> &C, 
+		     const Scalar1 &cgTol, const CgIntType &cgMaxIter, const int_type kdist, Scalar1 &logdet, 
+		     const MatrixBase<Derived1> &margVars, int verbosity)
+{
+  /*! THIS FUNCTION IS NOT FINISHED!!! */
+  Scalar1 logDetA;
+  Derived1 margVarsA(1);
+  logDetMargVar(A,cgTol,cgMaxIter,kdist,logDetA,margVarsA);
+  Derived1 solDv=Derived1::Zeros(denseVecs.rows(),denseVecs.cols());
+#pragma omp parallel for
+  for(int iii=0; iii<denseVecs.cols(); ++iii)
+  {
+    default_monitor<Scalar1> monitor(denseVecs.col(iii),cgMaxIter,cgTol);
+    eigen_krylov::cg(A,denseVecs.col(iii),solDv.col(iii),monitor);
+  }
+  MatrixXd S = C - denseVecs.transpose()*solDv;
+  Scalar1 logDetS=0;
+  logdet=logDetA + logDetS;
+}
+
+
+
+
+
+
+template <class LinearOperator, class Derived1, class Scalar1, class CgIntType>
+void logDetMargVar(const LinearOperator &A, const Scalar1 &cgTol, const CgIntType &cgMaxIter, const int_type kdist,
+		   Scalar1 &logdet, const MatrixBase<Derived1> &margVars, int verbosity)
+{
+  typedef std::complex<Scalar1> Scalar2;
+  Scalar1 pi(3.141592653589793238462643383279L);
+  Scalar1 minEig,maxEig;
+  Matrix<Scalar1,Dynamic,1> dummyX1(A.cols());
+  Matrix<Scalar1,Dynamic,1> dummyX2=Matrix<Scalar1,Dynamic,1>::Zero(A.cols());
+  
+  boost::normal_distribution<Scalar1> normDist(0,1);
+  boost::mt11213b randGen;
+  //randGen.seed(123);
+  boost::variate_generator<boost::mt11213b, boost::normal_distribution<Scalar1> > randNorm(randGen,normDist);
+  
+  
+  for (int_type jjj=0;jjj<A.rows();++jjj) {dummyX1(jjj)=randNorm();}
+  // std::cout << dummyX1 << "\n";
+  default_monitor<Scalar1> monEig(dummyX1, cgMaxIter, cgTol);
+  
+  
+  eigen_lanc_extremal_eig_mult(A, dummyX1, dummyX2, minEig, maxEig, monEig);
+  dummyX1=Matrix<Scalar1,Dynamic,1>::Zero(1);
+  dummyX2=Matrix<Scalar1,Dynamic,1>::Zero(1);
+  
+  // const Scalar1 minEig2(minEig), maxEig2(maxEig);
+  
+  const int_type nshifts(  static_cast<int>(-1.5*(std::log(maxEig/minEig)+6.)*std::log(cgTol)/(2.*pi*pi))  );
+  //const int_type nshifts(0); computeShifts(minEig,maxEig,cgTol,nshifts);
+  
+  // std::cout << "nshifts=" << nshifts << "\n";
+  
+  
+  logDetApp(A, minEig, maxEig, nshifts, cgTol, cgMaxIter, kdist, logdet, margVars,verbosity);
+}
+
+
+template <class LinearOperator, class Scalar1, class Derived1, class CgIntType >
+void logDetApp(const LinearOperator &A, const Scalar1 &min_eig, const Scalar1 &max_eig, 
+		 const int_type nshifts, const Scalar1 &cg_tol, const CgIntType &cgMaxIter, const int_type kdist, 
+		 Scalar1 &logdet, const MatrixBase<Derived1> &margVars, int verbosity)
+{
+  // typedef LinearOperator::Index indexType;
+  typedef typename internal::traits<LinearOperator>::Index indexType;
+  // cout << "The type of indexType is: " << typeid(indexType).name();
+  
+  typedef std::complex<Scalar1> Scalar2;
+
+  
+  Matrix<Scalar2,Dynamic,1> wsqEig(nshifts);
+  Matrix<Scalar2,Dynamic,1> dzdt(nshifts);
+  Scalar1 intConst;
+
+  jacobiEllipticDouble::logIntPoints(nshifts,min_eig,max_eig,intConst,wsqEig,dzdt,verbosity);
+  // wsqEig=-wsqEig;
+
+  
+  Matrix<int,Dynamic,1> ProbeVec(A.cols());
+  
+  int coloringtype=1;
+
+  computeProbingVectors(A,ProbeVec,coloringtype,kdist,verbosity);
+
+  
+  logDetBase(A, ProbeVec, wsqEig, dzdt, intConst, cg_tol, cgMaxIter, logdet, margVars,verbosity);
+  
+
+}
+
+
+#endif
