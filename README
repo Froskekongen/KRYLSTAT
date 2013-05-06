@@ -1,0 +1,57 @@
+Copyright 2012 Erlend Aune
+
+The Krylov statistics library (KRYLSTAT) is free C++ software
+under the LGPL license. It is designed to facilitate sampling
+from high dimensional Gaussian distributions using rational
+approximations and Krylov methods and computing log-determinants
+using the same methods with the addition of graph colouring.
+
+
+The code depends on ARPREC for computing high-precision Jacobi
+elliptic functions. The libRatApp.a-file includes this, but
+the header file for arprec is needed. The library can be found 
+on http://crd.lbl.gov/~dhbailey/mpdist/. 
+
+It depends on Eigen (http://eigen.tuxfamily.org/index.php)
+for blas-type functions and sparse matrix-vector products.
+
+On ColPack  (http://www.cscapes.org/coloringpage/software.htm) 
+for graph colouring.
+
+On boost (http://www.boost.org/) for computing IID normal
+samples.
+
+and on cusp (http://code.google.com/p/cusp-library/) for 
+GPU implementations.
+
+Additionally, OpenMP is required for parallel computations.
+
+
+The work is heavily in progress and in its infancy. As of
+today (16.03.2011), sampling and log-determinant approximations
+on the CPU is properly functioning. 
+
+Citing this software may be done by citing one or both of 
+the following bibtex entries:
+
+@ARTICLE{aunsimp_arx_par_est,
+  author = {Erlend Aune and Daniel P. Simpson},
+  title = {Parameter estimation in high dimensional Gaussian distributions},
+  journal = {arXiv:1105.5256v1 [stat.CO]},
+  year = {2011},
+  volume = {NA},
+  pages = {NA},
+  url = {http://arxiv.org/abs/1105.5256v1}
+}
+
+@ARTICLE{aun_samp_stco_2011,
+  author = {Erlend Aune and Jo Eidsvik and Yvo Pokern},
+  title = {terative Numerical Methods for Sampling from High Dimensional Gaussian Distributions},
+  journal = {Statistics and Computing},
+  year = {2011},
+  volume = {To appear},
+  pages = {NA}
+}
+
+
+
