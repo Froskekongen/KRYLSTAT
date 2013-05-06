@@ -32,10 +32,6 @@ GPU implementations.
 Additionally, OpenMP is required for parallel computations.
 
 
-The work is heavily in progress and in its infancy. As of
-today (16.03.2011), sampling and log-determinant approximations
-on the CPU is properly functioning. 
-
 Citing this software may be done by citing one or both of 
 the following bibtex entries:
 
