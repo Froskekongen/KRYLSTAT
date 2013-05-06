@@ -1,5 +1,10 @@
 Copyright 2012 Erlend Aune
 
+THIS LIBRARY IS NO LONGER MAINTAINED.
+It will be integrated into SHOGUN: 
+(https://github.com/shogun-toolbox/shogun)
+and future progress will be found there.
+
 The Krylov statistics library (KRYLSTAT) is free C++ software
 under the LGPL license. It is designed to facilitate sampling
 from high dimensional Gaussian distributions using rational
@@ -34,21 +39,20 @@ on the CPU is properly functioning.
 Citing this software may be done by citing one or both of 
 the following bibtex entries:
 
-@ARTICLE{aunsimp_arx_par_est,
-  author = {Erlend Aune and Daniel P. Simpson},
+@ARTICLE{aunsimp_par_est,
+  author = {Erlend Aune and Daniel P. Simpson and Jo Eidsvik},
   title = {Parameter estimation in high dimensional Gaussian distributions},
-  journal = {arXiv:1105.5256v1 [stat.CO]},
-  year = {2011},
-  volume = {NA},
+  journal = {Statistics and Computing},
+  year = {2013},
+  volume = {To appear},
   pages = {NA},
-  url = {http://arxiv.org/abs/1105.5256v1}
 }
 
-@ARTICLE{aun_samp_stco_2011,
+@ARTICLE{aun_samp_stco_2012,
   author = {Erlend Aune and Jo Eidsvik and Yvo Pokern},
   title = {terative Numerical Methods for Sampling from High Dimensional Gaussian Distributions},
   journal = {Statistics and Computing},
-  year = {2011},
+  year = {2012},
   volume = {To appear},
   pages = {NA}
 }
